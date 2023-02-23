@@ -33,6 +33,7 @@ class RelayManager:
             proxy_config: RelayProxyConnectionConfig = None):
 
         relay = Relay(url, self.message_pool, policy, ssl_options, proxy_config)
+        relay.error_threshold = 5
 
         with self.lock:
             self.relays[url] = relay

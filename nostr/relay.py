@@ -61,6 +61,7 @@ class Relay:
             http_proxy_host=self.proxy_config.host if self.proxy_config is not None else None, 
             http_proxy_port=self.proxy_config.port if self.proxy_config is not None else None,
             proxy_type=self.proxy_config.type if self.proxy_config is not None else None,
+            reconnect=5
         )
 
     def close(self):
