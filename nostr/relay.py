@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from queue import Queue
 from threading import Lock
 from typing import Optional
-from websocket import WebSocketApp
+from websocket import WebSocketApp, WebSocketConnectionClosedException
 from .event import Event
 from .filter import Filters
 from .message_pool import MessagePool
@@ -57,6 +57,8 @@ class Relay:
 
     def connect(self):
         self.ws.run_forever(
+            ping_interval=30,
+            ping_timeout=10,
             sslopt=self.ssl_options,
             http_proxy_host=self.proxy_config.host if self.proxy_config is not None else None, 
             http_proxy_port=self.proxy_config.port if self.proxy_config is not None else None,
@@ -85,8 +87,13 @@ class Relay:
             if self.connected:
                 message = self.queue.get()
                 try:
+                    # print(f'Sending {message} to {self.url}')
                     self.ws.send(message)
+                    # print(f'Sent message to {self.url}')
                     self.num_sent_events += 1
+                except WebSocketConnectionClosedException:
+                    # print(f'Connection closed for {self.url}')
+                    self.check_reconnect()
                 except:
                     self.queue.put(message)
             else:
