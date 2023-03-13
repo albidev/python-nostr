@@ -123,15 +123,18 @@ class Relay:
         }
 
     def _on_open(self, class_obj):
+        print(f'RELAY Connected: {self.url}')
         self.connected = True
 
     def _on_close(self, class_obj, status_code, message):
+        print(f'RELAY Closed: {status_code} {message} for {self.url}')
         self.connected = False
 
     def _on_message(self, class_obj, message: str):
         self.message_pool.add_message(message, self.url)
     
     def _on_error(self, class_obj, error):
+        print(f'RELAY Error: {error} for {self.url}')
         self.connected = False
         self.error_counter += 1
         if self.error_threshold and self.error_counter > self.error_threshold:
