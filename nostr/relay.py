@@ -57,8 +57,6 @@ class Relay:
 
     def connect(self):
         self.ws.run_forever(
-            ping_interval=30,
-            ping_timeout=10,
             sslopt=self.ssl_options,
             http_proxy_host=self.proxy_config.host if self.proxy_config is not None else None, 
             http_proxy_port=self.proxy_config.port if self.proxy_config is not None else None,
