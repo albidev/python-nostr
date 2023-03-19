@@ -20,10 +20,19 @@ class RelayException(Exception):
 
 @dataclass
 class RelayManager:
+    connection_monitor_interval_secs: int = 5
+
     def __post_init__(self):
         self.relays: dict[str, Relay] = {}
         self.message_pool: MessagePool = MessagePool()
         self.lock: Lock = Lock()
+
+        threading.Thread(
+            target=self._relay_connection_monitor,
+            name="relay-connection-monitor",
+            daemon=True
+        ).start()
+
 
     def add_relay(
             self, 
@@ -33,23 +42,10 @@ class RelayManager:
             proxy_config: RelayProxyConnectionConfig = None):
 
         relay = Relay(url, self.message_pool, policy, ssl_options, proxy_config)
-        relay.error_threshold = 5
 
         with self.lock:
             self.relays[url] = relay
-
-        threading.Thread(
-            target=relay.connect,
-            name=f"{relay.url}-thread"
-        ).start()
-        
-        threading.Thread(
-            target=relay.queue_worker,
-            name=f"{relay.url}-queue",
-            daemon=True
-        ).start()
-
-        time.sleep(1)
+            relay.connect()
 
     def remove_relay(self, url: str):
         with self.lock:
@@ -110,3 +106,12 @@ class RelayManager:
             for relay in self.relays.values():
                 if relay.policy.should_write:
                     relay.publish(event.to_message())
+
+    def _relay_connection_monitor(self):
+        while True:
+            with self.lock:
+                for relay in self.relays.values():
+                    if not relay.is_connected():
+                        relay.connect(True)
+
+            time.sleep(self.connection_monitor_interval_secs)
