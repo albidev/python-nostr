@@ -38,6 +38,8 @@ class Relay:
     proxy_config: RelayProxyConnectionConfig = None
     error_threshold: int = 5
 
+    on_open_callback: Optional[callable] = None
+
     def __post_init__(self):
         self.outgoing_messages = Queue()
         self.subscriptions: dict[str, Subscription] = {}
@@ -125,8 +127,9 @@ class Relay:
         }
 
     def _on_open(self, class_obj):
-        print(f"Connected to {self.url}")
-        pass
+        print(f"relay.py - Connected to {self.url}")
+        # callback to relay manager
+        self.on_open_callback(self.url)
 
     def _on_close(self, class_obj, status_code, message):
         print(f"Closed connection to {self.url} with status code {status_code} and message {message}")

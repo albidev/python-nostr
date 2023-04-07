@@ -10,8 +10,7 @@ from .message_pool import MessagePool
 from .message_type import ClientMessageType
 from .relay import Relay, RelayPolicy, RelayProxyConnectionConfig
 from .request import Request
-
-
+from typing import Optional
 
 class RelayException(Exception):
     pass
@@ -21,6 +20,8 @@ class RelayException(Exception):
 @dataclass
 class RelayManager:
     connection_monitor_interval_secs: int = 5
+
+    on_relay_open: Optional[callable] = None
 
     def __post_init__(self):
         self.relays: dict[str, Relay] = {}
@@ -42,6 +43,7 @@ class RelayManager:
             proxy_config: RelayProxyConnectionConfig = None):
 
         relay = Relay(url, self.message_pool, policy, ssl_options, proxy_config)
+        relay.on_open_callback = self.on_relay_open
 
         with self.lock:
             self.relays[url] = relay
