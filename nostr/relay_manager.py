@@ -22,11 +22,15 @@ class RelayManager:
     connection_monitor_interval_secs: int = 5
 
     on_relay_open: Optional[callable] = None
+    on_relay_close: Optional[callable] = None
+
+    stop_threads: bool = False
 
     def __post_init__(self):
         self.relays: dict[str, Relay] = {}
         self.message_pool: MessagePool = MessagePool()
         self.lock: Lock = Lock()
+        self.stop_threads = False
 
         threading.Thread(
             target=self._relay_connection_monitor,
@@ -44,6 +48,7 @@ class RelayManager:
 
         relay = Relay(url, self.message_pool, policy, ssl_options, proxy_config)
         relay.on_open_callback = self.on_relay_open
+        relay.on_close_callback = self.on_relay_close
 
         with self.lock:
             self.relays[url] = relay
@@ -110,7 +115,7 @@ class RelayManager:
                     relay.publish(event.to_message())
 
     def _relay_connection_monitor(self):
-        while True:
+        while not self.stop_threads:
             with self.lock:
                 for relay in self.relays.values():
                     if not relay.is_connected():
