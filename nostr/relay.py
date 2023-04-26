@@ -141,7 +141,7 @@ class Relay:
         self.message_pool.add_message(message, self.url)
     
     def _on_error(self, class_obj, error):
-        print(f"Error in connection to {self.url}: {error}")
+        # print(f"Error in connection to {self.url}: {error}")
         self.error_counter += 1
         if self.error_counter > self.error_threshold:
             self.close()
