@@ -135,8 +135,7 @@ class Relay:
     def _on_close(self, class_obj, status_code, message):
         # print(f"Closed connection to {self.url} with status code {status_code} and message {message}")
         self.error_counter = 0
-        if self.on_close_callback:
-            self.on_close_callback(self.url)
+        self.on_close_callback(self.url)
 
     def _on_message(self, class_obj, message: str):
         self.message_pool.add_message(message, self.url)
