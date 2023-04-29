@@ -117,8 +117,9 @@ class RelayManager:
     def _relay_connection_monitor(self):
         while not self.stop_threads:
             with self.lock:
-                for relay in self.relays.values():
-                    if not relay.is_connected():
-                        relay.connect(True)
+                if len(self.relays) > 0:
+                    for relay in self.relays.values():
+                        if not relay.is_connected():
+                            relay.connect(True)
 
             time.sleep(self.connection_monitor_interval_secs)
